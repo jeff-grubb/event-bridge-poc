@@ -1,0 +1,76 @@
+# Name Examples
+# dev-fs-spark-v3-local-event-bus
+# dev-gen-spark-v3-global-event-bus
+# dev-et-spark-v3-local-event-bus
+#
+# Quotas for Event Buses
+# 100 event bus limit per account
+# 300 Rules per Bus (except af-south/eu-south, each with 100 per bus)
+# 30 rules per event bus with wildcards
+
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: Event Bridge Bus Creation
+
+Parameters:
+  CloudformationTemplateSource:
+    Description: The Cloudformation template source in the S3 bucket
+    Type: String
+
+  PrimaryControlBucket:
+    Description: Primary region control bucket SSM Parameter reference
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /infrastructure/control_bucket
+
+  Environment:
+    Description: Environment for deployment
+    Type: String
+    AllowedValues:
+      - dev
+      - stage
+      - prod
+      - poc
+    Default: dev
+    ConstraintDescription: Must be one of Dev, Stage, Prod, or POC.
+
+  Scope:
+    Description: The scope of the bus
+    Type: String
+    AllowedValues:
+      - local
+      - global
+    Default: local
+    ConstraintDescription: Must be one of local, global
+
+  APIName:
+    Description: The name of the business unit
+    Type: String
+    AllowedValues:
+      - fs
+      - fw
+      - fb
+      - fn
+      - ok
+      - gen
+      - et
+    ConstraintDescription: Must be a supported BU Abbreviation (fs, fw, fb, fn, ok, gen, et)
+
+Mappings:
+  AWSAccounts:
+    Fn::Transform:
+      Name: AWS::Include
+      Parameters:
+        Location: !Sub "s3://${PrimaryControlBucket}/formation/include/AWSAccounts.json"
+
+Resources:
+  CustomEventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: !Sub "${Environment}-${APIName}-spark-v3-${Scope}-event-bus"
+
+Outputs:
+  CustomEventBusArn:
+    Description: The ARN of the custom event bus
+    Value: !GetAtt CustomEventBus.Arn
+    Export:
+      Name: !Sub "${Environment}-${APIName}-spark-v3-${Scope}-event-bus-arn"

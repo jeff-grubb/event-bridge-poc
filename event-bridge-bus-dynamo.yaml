@@ -1,0 +1,104 @@
+# Names:
+# dev-fs-spark-v3-dynamo-event-pipes
+
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: Event Bridge Bus Dynamo DB Rules
+
+Parameters:
+  CloudformationTemplateSource:
+    Description: The Cloudformation template source in the S3 bucket
+    Type: String
+
+  PrimaryControlBucket:
+    Description: Primary region control bucket SSM Parameter reference
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /infrastructure/control_bucket
+
+  Environment:
+    Description: Environment for deployment
+    Type: String
+    AllowedValues:
+      - dev
+      - stage
+      - prod
+      - poc
+    Default: dev
+    ConstraintDescription: Must be one of Dev, Stage, Prod, or POC.
+
+  APIName:
+    Description: The name of the business unit
+    Type: String
+    AllowedValues:
+      - fs
+      - fw
+      - fb
+      - fn
+      - ok
+    ConstraintDescription: Must be a supported BU Abbreviation (fs, fw, fb, fn, ok)
+
+Mappings:
+  AWSAccounts:
+    Fn::Transform:
+      Name: AWS::Include
+      Parameters:
+        Location: !Sub "s3://${PrimaryControlBucket}/formation/include/AWSAccounts.json"
+
+Resources:
+  PipeIAMRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - pipes.amazonaws.com
+                #- lambda.amazonaws.com # for enrichment lambda, if necessary
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: DynamoDBPipeSource
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:DescribeStream
+                  - dynamodb:GetRecords
+                  - dynamodb:GetShardIterator
+                  - dynamodb:ListStreams
+                Resource:
+                  - Fn::ImportValue:
+                      'Fn::Sub': "${Environment}-${APIName}-spark-v3-content-stream-arn"
+        - PolicyName: EventBusPipeTarget
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - events:PutEvents
+                Resource:
+                  - Fn::ImportValue:
+                      'Fn::Sub': "${Environment}-${APIName}-spark-v3-local-event-bus-arn"
+
+  V3ContentPipe:
+    Type: AWS::Pipes::Pipe
+    Properties:
+      Description: >-
+        Pipe spark v3 content dynamo table stream events to the local event bus
+      Name: !Sub "${Environment}-${APIName}-spark-v3-content-event-bus-pipe"
+      RoleArn:
+        'Fn::GetAtt':
+          - PipeIAMRole
+          - Arn
+      Source:
+        Fn::ImportValue:
+          'Fn::Sub': "${Environment}-${APIName}-spark-v3-content-stream-arn"
+      SourceParameters:
+        DynamoDBStreamParameters:
+          StartingPosition: LATEST
+      Target:
+        Fn::ImportValue:
+          'Fn::Sub': "${Environment}-${APIName}-spark-v3-local-event-bus-arn"
