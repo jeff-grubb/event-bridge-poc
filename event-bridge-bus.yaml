@@ -83,14 +83,8 @@ Resources:
             "aws:PrincipalOrgID": "o-dtkatxuafm"
 
 Outputs:
-  CustomEventBus:
-    Description: The ARN of the custom event bus
-    Value: !GetAtt CustomEventBus.Name
-    Export:
-      Name: !Sub "${Environment}-${APIName}-spark-v3-${Scope}-event-bus-name"
-
   CustomEventBusArn:
     Description: The ARN of the custom event bus
     Value: !GetAtt CustomEventBus.Arn
     Export:
-      Name: !Sub "${Environment}-${APIName}-spark-v3-${Scope}-event-bus-name"
+      Name: !Sub "${Environment}-${APIName}-spark-v3-${Scope}-event-bus-arn"
