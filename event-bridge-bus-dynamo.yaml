@@ -83,6 +83,24 @@ Resources:
                   - Fn::ImportValue:
                       'Fn::Sub': "${Environment}-${APIName}-spark-v3-local-event-bus-arn"
 
+        - PolicyName: CloudWatchLogging
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
+
+  V3ContentPipeLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/vendedlogs/${Environment}-${APIName}-spark-v3-content-event-bus-pipe"
+      RetentionInDays: 7
+
   V3ContentPipe:
     Type: AWS::Pipes::Pipe
     Properties:
@@ -102,3 +120,11 @@ Resources:
       Target:
         Fn::ImportValue:
           'Fn::Sub': "${Environment}-${APIName}-spark-v3-local-event-bus-arn"
+
+      LogConfiguration:
+        Level: INFO
+        CloudwatchLogsLogDestination:
+          LogGroupArn:
+            'Fn::GetAtt':
+              - V3ContentPipeLogGroup
+              - Arn
