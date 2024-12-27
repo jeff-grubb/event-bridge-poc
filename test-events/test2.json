@@ -1,0 +1,33 @@
+{
+  'version': '0',
+  'id': '69f35e14-fe82-e070-1665-ea90dab44377',
+  'detail-type': 'Event from aws:dynamodb',
+  'source': 'Pipe dev-fs-spark-v3-content-event-bus-pipe',
+  'account': '684424026845',
+  'time': '2024-12-27T02:29:55Z',
+  'region': 'us-east-1',
+  'resources': [],
+  'detail':
+  {
+    'eventID': '5661e3115ba354b0f909e73f73c5203d',
+    'eventName': 'MODIFY',
+    'eventVersion': '1.1',
+    'eventSource': 'aws:dynamodb',
+    'awsRegion': 'us-east-1',
+    'dynamodb': {
+      'ApproximateCreationDateTime': 1735266594,
+      'Keys': {
+        'spark_id': {'S': '4dfd78f7-a099-5b52-bf76-a2d170dfed51'},
+        'post_status': {'S': 'publish'}
+      },
+      'NewImage': {
+      },
+      'OldImage': {
+      },
+      'SequenceNumber': '1354320800001519654742112821',
+      'SizeBytes': 28450,
+      'StreamViewType': 'NEW_AND_OLD_IMAGES'
+    },
+    'eventSourceARN': 'arn:aws:dynamodb:us-east-1:684424026845:table/dev-fs-spark-v3-content/stream/2024-03-25T19:18:24.742'
+  }
+}
