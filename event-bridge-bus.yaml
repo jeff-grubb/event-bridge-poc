@@ -68,6 +68,20 @@ Resources:
     Properties:
       Name: !Sub "${Environment}-${APIName}-spark-v3-${Scope}-event-bus"
 
+  CustomEventBusPolicy:
+    Type: AWS::Events::EventBusPolicy
+    Properties:
+      StatementId: "AllowAllAccountsFromOrganizationToPutEvents"
+      EventBusName: !Ref CustomEventBus
+      Statement:
+        Effect: "Allow"
+        Principal: "*"
+        Action: "events:PutEvents"
+        Resource: !GetAtt CustomEventBus.Arn
+        Condition:
+          StringEquals:
+            "aws:PrincipalOrgID": "o-dtkatxuafm"
+
 Outputs:
   CustomEventBusArn:
     Description: The ARN of the custom event bus

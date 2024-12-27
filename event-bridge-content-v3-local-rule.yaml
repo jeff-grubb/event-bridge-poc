@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: Event Bridge Bus Rules Creation
+
+Parameters:
+  CloudformationTemplateSource:
+    Description: The Cloudformation template source in the S3 bucket
+    Type: String
+
+  PrimaryControlBucket:
+    Description: Primary region control bucket SSM Parameter reference
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /infrastructure/control_bucket
+
+  Environment:
+    Description: Environment for deployment
+    Type: String
+    AllowedValues:
+      - dev
+      - stage
+      - prod
+      - poc
+    Default: dev
+    ConstraintDescription: Must be one of Dev, Stage, Prod, or POC.
+
+  Scope:
+    Description: The scope of the bus
+    Type: String
+    AllowedValues:
+      - local
+      - global
+    Default: local
+    ConstraintDescription: Must be one of local, global
+
+  APIName:
+    Description: The name of the business unit
+    Type: String
+    AllowedValues:
+      - fs
+      - fw
+      - fb
+      - fn
+      - ok
+      - gen
+      - et
+    ConstraintDescription: Must be a supported BU Abbreviation (fs, fw, fb, fn, ok, gen, et)
+
+Mappings:
+  EventBridgeTarget:
+    dev:
+      target: arn:aws:events:us-east-1:008971673418:event-bus/dev-gen-spark-v3-global-event-bus
+
+Resources:
+  GlobalEventBridgeRule:
+    Type: 'AWS::Events::Rule'
+    Properties:
+      Name: !Sub "${Environment}-${APIName}-spark-v3-dynamo-global-publish-rule"
+      Description: Routes to us-east-1 global event bus
+      EventBusName:
+        'Fn::ImportValue':
+          'Fn::Sub': "${Environment}-${APIName}-spark-v3-local-event-bus-arn"
+
+      State: ENABLED
+      EventPattern:
+        detail:
+          eventSourceARN:
+            - wildcard: "*spark-v3-content*"
+      Targets:
+        - Arn: !FindInMap [EventBridgeTarget, !Ref Environment, target]
+          Id: 'GlobalEventBus'
+          RoleArn: !GetAtt
+            - EventBridgeIAMrole
+            - Arn
+
+  EventBridgeIAMrole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: PutEventsDestinationBus
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'events:PutEvents'
+                Resource:
+                  - !FindInMap [EventBridgeTarget, !Ref Environment, target]
