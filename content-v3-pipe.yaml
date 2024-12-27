@@ -2,11 +2,11 @@
 # dev-fs-spark-v3-dynamo-event-pipes
 
 #######################################################
-# Creates a local or global eventbridge bus
+# Creates an eventbridge pipe that publishes dynamodb stream events from v3-content to the local eventbridge bus
 #######################################################
 
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Content V3 EventBridge Pipe
+Description: V3 Content EventBridge Pipe
 
 Parameters:
   CloudformationTemplateSource:

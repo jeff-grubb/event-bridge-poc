@@ -1,9 +1,9 @@
 #######################################################
-# When applied to a BU, creates a rule that pushes content-v3 dynamo changes to the global bus
+# Creates a rule that publishes v3-content stream events changes to the global bus
 #######################################################
 
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Content V3 EventBridge Publish Rule
+Description: V3 Content EventBridge Global Publish Rule
 
 Parameters:
   CloudformationTemplateSource:
