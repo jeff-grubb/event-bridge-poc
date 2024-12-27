@@ -1,0 +1,88 @@
+#######################################################
+# Creates a rule that executes the content stream lambda
+#######################################################
+
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Content Stream Lambda Execution Rule
+
+Parameters:
+  CloudformationTemplateSource:
+    Description: The Cloudformation template source in the S3 bucket
+    Type: String
+
+  Environment:
+    Description: Environment for deployment
+    Type: String
+    AllowedValues:
+      - dev
+      - stage
+      - prod
+      - poc
+    Default: dev
+    ConstraintDescription: Must be one of Dev, Stage, Prod, or POC.
+
+  APIName:
+    Description: The name of the business unit
+    Type: String
+    AllowedValues:
+      - fs
+      - fw
+      - fb
+      - fn
+      - ok
+      - gen
+      - et
+    ConstraintDescription: Must be a supported BU Abbreviation (fs, fw, fb, fn, ok, gen, et)
+
+  LambdaArn:
+    Description: ARN of the lambda to execute
+    Type: String
+    Default: arn:aws:lambda:us-east-1:008971673418:function:dev-gen-jg-test-eventbridge-target-lambda
+    ConstraintDescription: The ARN of the lambda to execute
+
+  LambdaName:
+    Description: Short Name of the lambda to execute
+    Type: String
+    Default: test-lambda
+    ConstraintDescription: The Short name of the lambda to execute
+
+  Scope:
+    Description: The scope of the bus
+    Type: String
+    AllowedValues:
+      - local
+      - global
+    Default: local
+    ConstraintDescription: Must be one of local, global
+
+Resources:
+  GlobalEventBridgeRule:
+    Type: 'AWS::Events::Rule'
+    Properties:
+      Name: !Sub "${Environment}-${APIName}-spark-v3-dynamo-${Scope}-${LambdaName}-execution-rule"
+      Description: Routes to us-east-1 global event bus
+      EventBusName:
+        'Fn::ImportValue':
+          'Fn::Sub': "${Environment}-${APIName}-spark-v3-${Scope}-event-bus-arn"
+
+      State: ENABLED
+      EventPattern:
+        detail:
+          eventSourceARN:
+            - wildcard: "*spark-v3-content*"
+      Targets:
+        - Arn: !Sub "${LambdaArn}"
+          Id: !Sub "${LambdaName}"
+          #RoleArn: !GetAtt
+          #  - EventBridgeIAMrole
+          #  - Arn
+
+  EventBridgeLambdaTriggerPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: "lambda:invokeFunction"
+      FunctionName: !Sub "${LambdaArn}"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt
+        - GlobalEventBridgeRule
+        - Arn
