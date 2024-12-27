@@ -46,26 +46,27 @@ Parameters:
     ConstraintDescription: Must be a supported BU Abbreviation (fs, fw, fb, fn, ok, gen, et)
 
 Mappings:
-  AWSAccounts:
-    Fn::Transform:
-      Name: AWS::Include
-      Parameters:
-        Location: !Sub "s3://${PrimaryControlBucket}/formation/include/AWSAccounts.json"
+  EventBridgeTarget:
+    dev:
+      target: arn:aws:events:us-east-1:008971673418:event-bus/dev-gen-spark-v3-global-event-bus
 
 Resources:
-  GlobalEventPublishRule:
+  GlobalEventBridgeRule:
     Type: 'AWS::Events::Rule'
     Properties:
       Name: !Sub "${Environment}-${APIName}-spark-v3-dynamo-global-publish-rule"
       Description: Routes to us-east-1 global event bus
-      EventBusName: arn:aws:events:us-east-1:684424026845:event-bus/dev-fs-spark-v3-local-event-bus
+      EventBusName:
+        'Fn::ImportValue':
+          'Fn::Sub': "${Environment}-${APIName}-spark-v3-local-event-bus-arn"
+
       State: ENABLED
       EventPattern:
-        source:
-          - aws.dynamodb
+        detail:
+          eventSourceARN:
+            - wildcard: "*spark-v3-content*"
       Targets:
-        - Arn: >-
-            arn:aws:events:us-east-1:008971673418:event-bus/dev-gen-spark-v3-global-event-bus
+        - Arn: !FindInMap [EventBridgeTarget, !Ref Environment, target]
           Id: 'GlobalEventBus'
           RoleArn: !GetAtt
             - EventBridgeIAMrole
@@ -79,7 +80,7 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Service: !Sub events.amazonaws.com
+              Service: events.amazonaws.com
             Action: 'sts:AssumeRole'
       Path: /
       Policies:
@@ -91,5 +92,4 @@ Resources:
                 Action:
                   - 'events:PutEvents'
                 Resource:
-                  - >-
-                    arn:aws:events:us-east-1:008971673418:event-bus/dev-gen-spark-v3-global-event-bus
+                  - !FindInMap [EventBridgeTarget, !Ref Environment, target]

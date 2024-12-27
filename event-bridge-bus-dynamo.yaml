@@ -69,6 +69,8 @@ Resources:
                   - dynamodb:GetRecords
                   - dynamodb:GetShardIterator
                   - dynamodb:ListStreams
+                  - dynamodb:BatchGetItem
+                  - dynamodb:GetItem
                 Resource:
                   - Fn::ImportValue:
                       'Fn::Sub': "${Environment}-${APIName}-spark-v3-content-stream-arn"
