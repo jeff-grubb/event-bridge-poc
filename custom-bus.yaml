@@ -8,6 +8,10 @@
 # 300 Rules per Bus (except af-south/eu-south, each with 100 per bus)
 # 30 rules per event bus with wildcards
 
+#######################################################
+# Creates a local or global eventbridge bus
+#######################################################
+
 AWSTemplateFormatVersion: "2010-09-09"
 
 Description: Event Bridge Bus Creation
@@ -16,11 +20,6 @@ Parameters:
   CloudformationTemplateSource:
     Description: The Cloudformation template source in the S3 bucket
     Type: String
-
-  PrimaryControlBucket:
-    Description: Primary region control bucket SSM Parameter reference
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: /infrastructure/control_bucket
 
   Environment:
     Description: Environment for deployment
@@ -54,13 +53,6 @@ Parameters:
       - gen
       - et
     ConstraintDescription: Must be a supported BU Abbreviation (fs, fw, fb, fn, ok, gen, et)
-
-Mappings:
-  AWSAccounts:
-    Fn::Transform:
-      Name: AWS::Include
-      Parameters:
-        Location: !Sub "s3://${PrimaryControlBucket}/formation/include/AWSAccounts.json"
 
 Resources:
   CustomEventBus:

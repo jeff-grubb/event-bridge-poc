@@ -1,19 +1,17 @@
 # Names:
 # dev-fs-spark-v3-dynamo-event-pipes
 
-AWSTemplateFormatVersion: "2010-09-09"
+#######################################################
+# Creates a local or global eventbridge bus
+#######################################################
 
-Description: Event Bridge Bus Dynamo DB Rules
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Content V3 EventBridge Pipe
 
 Parameters:
   CloudformationTemplateSource:
     Description: The Cloudformation template source in the S3 bucket
     Type: String
-
-  PrimaryControlBucket:
-    Description: Primary region control bucket SSM Parameter reference
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: /infrastructure/control_bucket
 
   Environment:
     Description: Environment for deployment
@@ -37,13 +35,6 @@ Parameters:
       - ok
     ConstraintDescription: Must be a supported BU Abbreviation (fs, fw, fb, fn, ok)
 
-Mappings:
-  AWSAccounts:
-    Fn::Transform:
-      Name: AWS::Include
-      Parameters:
-        Location: !Sub "s3://${PrimaryControlBucket}/formation/include/AWSAccounts.json"
-
 Resources:
   PipeIAMRole:
     Type: 'AWS::IAM::Role'
@@ -55,7 +46,6 @@ Resources:
             Principal:
               Service:
                 - pipes.amazonaws.com
-                #- lambda.amazonaws.com # for enrichment lambda, if necessary
             Action:
               - 'sts:AssumeRole'
       Policies:

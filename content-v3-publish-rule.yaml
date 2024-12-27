@@ -1,16 +1,14 @@
-AWSTemplateFormatVersion: "2010-09-09"
+#######################################################
+# When applied to a BU, creates a rule that pushes content-v3 dynamo changes to the global bus
+#######################################################
 
-Description: Event Bridge Bus Rules Creation
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Content V3 EventBridge Publish Rule
 
 Parameters:
   CloudformationTemplateSource:
     Description: The Cloudformation template source in the S3 bucket
     Type: String
-
-  PrimaryControlBucket:
-    Description: Primary region control bucket SSM Parameter reference
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: /infrastructure/control_bucket
 
   Environment:
     Description: Environment for deployment
@@ -22,15 +20,6 @@ Parameters:
       - poc
     Default: dev
     ConstraintDescription: Must be one of Dev, Stage, Prod, or POC.
-
-  Scope:
-    Description: The scope of the bus
-    Type: String
-    AllowedValues:
-      - local
-      - global
-    Default: local
-    ConstraintDescription: Must be one of local, global
 
   APIName:
     Description: The name of the business unit
