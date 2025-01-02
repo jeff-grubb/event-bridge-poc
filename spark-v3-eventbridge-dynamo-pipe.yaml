@@ -1,17 +1,18 @@
 # Names:
-# dev-fs-spark-v3-dynamo-event-pipes
+# dev-fs-spark-v3-eventbridge-dynamo-{table}-pipe
 
 #######################################################
-# Creates an eventbridge pipe that publishes dynamodb stream events from v3-content to the local eventbridge bus
+# Creates an eventbridge pipe that publishes dynamodb events to the v3 content publisher
 #######################################################
 
 AWSTemplateFormatVersion: "2010-09-09"
-Description: V3 Content EventBridge Pipe
+Description: V3 EventBridge Dynamo Pipe to Content Publisher
 
 Parameters:
   CloudformationTemplateSource:
     Description: The Cloudformation template source in the S3 bucket
     Type: String
+    Default: testing
 
   Environment:
     Description: Environment for deployment
@@ -33,10 +34,20 @@ Parameters:
       - fb
       - fn
       - ok
+    Default: fs
     ConstraintDescription: Must be a supported BU Abbreviation (fs, fw, fb, fn, ok)
 
+  TableName:
+    Description: The name of the v3 table to publish events from
+    Type: String
+    AllowedValues:
+      - content
+      - videos
+    Default: content
+    ConstraintDescription: "Must be a dynamo v3 table"
+
 Resources:
-  PipeIAMRole:
+  EventBridgeContentPipeIAMRole:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
@@ -61,19 +72,20 @@ Resources:
                   - dynamodb:ListStreams
                   - dynamodb:BatchGetItem
                   - dynamodb:GetItem
-                Resource:
+                Resource: # Todo: expand this to other dynamo db tables
                   - Fn::ImportValue:
-                      'Fn::Sub': "${Environment}-${APIName}-spark-v3-content-stream-arn"
-        - PolicyName: EventBusPipeTarget
+                      'Fn::Sub': "${Environment}-${APIName}-spark-v3-${TableName}-stream-arn"
+
+        - PolicyName: InvokePublishLambda
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
               - Effect: Allow
                 Action:
-                  - events:PutEvents
+                  - lambda:InvokeFunction
                 Resource:
-                  - Fn::ImportValue:
-                      'Fn::Sub': "${Environment}-${APIName}-spark-v3-local-event-bus-arn"
+                  Fn::ImportValue:
+                    'Fn::Sub': "${Environment}-${APIName}-spark-v3-content-publisher-arn"
 
         - PolicyName: CloudWatchLogging
           PolicyDocument:
@@ -87,36 +99,48 @@ Resources:
                 Resource:
                   !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
 
-  V3ContentPipeLogGroup:
+  EventBridgeContentPipeLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/vendedlogs/${Environment}-${APIName}-spark-v3-content-event-bus-pipe"
+      LogGroupName: !Sub "/aws/vendedlogs/${Environment}-${APIName}-spark-v3-eventbridge-dynamo-pipe"
       RetentionInDays: 7
 
-  V3ContentPipe:
+  EventBridgeContentPipe:
     Type: AWS::Pipes::Pipe
     Properties:
       Description: >-
         Pipe spark v3 content dynamo table stream events to the local event bus
-      Name: !Sub "${Environment}-${APIName}-spark-v3-content-event-bus-pipe"
+      Name: !Sub "${Environment}-${APIName}-spark-v3-eventbridge-dynamo-pipe"
       RoleArn:
         'Fn::GetAtt':
-          - PipeIAMRole
+          - EventBridgeContentPipeIAMRole
           - Arn
       Source:
-        Fn::ImportValue:
-          'Fn::Sub': "${Environment}-${APIName}-spark-v3-content-stream-arn"
+        Fn::ImportValue: # Todo: expand this to other dynamo db tables?
+          'Fn::Sub': "${Environment}-${APIName}-spark-v3-${TableName}-stream-arn"
       SourceParameters:
         DynamoDBStreamParameters:
           StartingPosition: LATEST
       Target:
         Fn::ImportValue:
-          'Fn::Sub': "${Environment}-${APIName}-spark-v3-local-event-bus-arn"
+          'Fn::Sub': "${Environment}-${APIName}-spark-v3-content-publisher-arn"
 
       LogConfiguration:
         Level: INFO
         CloudwatchLogsLogDestination:
           LogGroupArn:
             'Fn::GetAtt':
-              - V3ContentPipeLogGroup
+              - EventBridgeContentPipeLogGroup
               - Arn
+
+  EventBridgeLambdaTriggerPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: "lambda:invokeFunction"
+      FunctionName:
+        Fn::ImportValue:
+          'Fn::Sub': "${Environment}-${APIName}-spark-v3-content-publisher-arn"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt
+        - EventBridgeContentPipe
+        - Arn

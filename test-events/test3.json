@@ -1,0 +1,33 @@
+{
+  'version': '0',
+  'id': '36defcf5-0d76-e103-f2f2-2dc931edfc37',
+  'detail-type': 'dynamodb',
+  'source': 'dev-fs-spark-v3-content',
+  'account': '684424026845',
+  'time': '2025-01-02T02:04:44Z',
+  'region': 'us-east-1',
+  'resources': [],
+  'detail': {
+    'eventID': 'c9204011749f327bc2e9a08833ece737',
+    'eventName': 'MODIFY',
+    'eventVersion': '1.1',
+    'eventSource': 'aws:dynamodb',
+    'awsRegion': 'us-east-1',
+    'dynamodb': {
+      'ApproximateCreationDateTime': 1735783363,
+      'Keys': {
+        'spark_id': {'S': '4dfd78f7-a099-5b52-bf76-a2d170dfed51'},
+        'post_status': {'S': 'publish'}},
+      'NewImage': {
+        '...': '...'
+      },
+      'OldImage': {
+        '...': '...'
+      },
+      'SequenceNumber': '1382281600003538245616355827',
+      'SizeBytes': 28454,
+      'StreamViewType': 'NEW_AND_OLD_IMAGES'
+    },
+    'eventSourceARN': 'arn:aws:dynamodb:us-east-1:684424026845:table/dev-fs-spark-v3-content/stream/2024-03-25T19:18:24.742'
+  }
+}

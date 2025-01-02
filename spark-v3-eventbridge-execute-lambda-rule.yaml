@@ -1,3 +1,6 @@
+# Name Examples:
+# dev-et-eventbridge-rule-execute-content-stream-lambda
+
 #######################################################
 # Creates a rule that executes the content stream lambda
 #######################################################
@@ -37,33 +40,24 @@ Parameters:
   LambdaArn:
     Description: ARN of the lambda to execute
     Type: String
-    Default: arn:aws:lambda:us-east-1:008971673418:function:dev-gen-jg-test-eventbridge-target-lambda
+    Default: arn:aws:lambda:us-east-1:954976311447:function:dev-et-fox-content-stream
     ConstraintDescription: The ARN of the lambda to execute
 
   LambdaName:
     Description: Short Name of the lambda to execute
     Type: String
-    Default: test-lambda
+    Default: content-stream
     ConstraintDescription: The Short name of the lambda to execute
 
-  Scope:
-    Description: The scope of the bus
-    Type: String
-    AllowedValues:
-      - local
-      - global
-    Default: local
-    ConstraintDescription: Must be one of local, global
-
 Resources:
-  GlobalEventBridgeRule:
+  LambdaExecuteEventBridgeRule:
     Type: 'AWS::Events::Rule'
     Properties:
-      Name: !Sub "${Environment}-${APIName}-spark-v3-dynamo-${Scope}-${LambdaName}-execution-rule"
-      Description: Routes to us-east-1 global event bus
+      Name: !Sub "${Environment}-${APIName}-spark-v3-${LambdaName}-execution-rule"
+      Description: A rule to execute a lambda from events published from the EventBridge bus
       EventBusName:
         'Fn::ImportValue':
-          'Fn::Sub': "${Environment}-${APIName}-spark-v3-${Scope}-event-bus-arn"
+          'Fn::Sub': "${Environment}-${APIName}-spark-v3-event-bus-arn"
 
       State: ENABLED
       EventPattern:
@@ -73,9 +67,6 @@ Resources:
       Targets:
         - Arn: !Sub "${LambdaArn}"
           Id: !Sub "${LambdaName}"
-          #RoleArn: !GetAtt
-          #  - EventBridgeIAMrole
-          #  - Arn
 
   EventBridgeLambdaTriggerPermission:
     Type: 'AWS::Lambda::Permission'
@@ -84,5 +75,5 @@ Resources:
       FunctionName: !Sub "${LambdaArn}"
       Principal: "events.amazonaws.com"
       SourceArn: !GetAtt
-        - GlobalEventBridgeRule
+        - LambdaExecuteEventBridgeRule
         - Arn
