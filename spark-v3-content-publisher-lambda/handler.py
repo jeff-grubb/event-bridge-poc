@@ -21,7 +21,7 @@ def lambda_handler(events, context):
     for event in events:
         new_event = {
             'Source': "{0}-{1}-spark-v3-content-publisher".format(ENV, BUSINESS_UNIT),
-            'DetailType': 'dynamodb',
+            'DetailType': 'spark-event-bridge',
             'Detail': json.dumps(event),
             'EventBusName': TARGET_BUS_ARN
         }

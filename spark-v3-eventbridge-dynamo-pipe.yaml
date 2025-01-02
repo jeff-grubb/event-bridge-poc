@@ -121,6 +121,7 @@ Resources:
       SourceParameters:
         DynamoDBStreamParameters:
           StartingPosition: LATEST
+          BatchSize: 1
       Target:
         Fn::ImportValue:
           'Fn::Sub': "${Environment}-${APIName}-spark-v3-content-publisher-arn"
