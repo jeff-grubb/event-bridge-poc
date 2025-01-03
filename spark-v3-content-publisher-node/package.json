@@ -1,0 +1,38 @@
+{
+  "name": "jg-test-lambda",
+  "version": "0.0.1",
+  "description": "JG Test Lambda",
+  "main": "./build/index.js",
+  "types": "build/index.d.ts",
+  "scripts": {
+    "build": "rm -rf build/ && tsc --project tsconfig.json"
+  },
+  "repository": "git://github.com",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "author": "",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com"
+  },
+  "homepage": "https://github.com",
+  "dependencies": {
+    "@aws-sdk/types": "^3.502.0",
+    "@aws-sdk/util-dynamodb": "^3.172.0",
+    "@types/aws-lambda": "^8.10.103",
+    "agentkeepalive": "^4.1.4",
+    "axios": "1.7.2",
+    "bufferutil": "^4.0.8",
+    "http-aws-es": "^6.0.0",
+    "node-fetch": "^2.7.0",
+    "utf-8-validate": "^5.0.10",
+    "xmlbuilder2": "3.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "20.10.6",
+    "ts-jest": "29.1.1",
+    "ts-node": "^7.0.1",
+    "typescript": "5.1.6"
+  }
+}
