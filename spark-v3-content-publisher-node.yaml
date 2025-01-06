@@ -1,0 +1,133 @@
+# dev-fs-spark-v3-content-publisher
+
+#######################################################
+# Creates the content publisher lambda
+#######################################################
+
+AWSTemplateFormatVersion: "2010-09-09"
+Description: V3 Content Publisher Lambda
+
+Parameters:
+  CloudformationTemplateSource:
+    Description: The Cloudformation template source in the S3 bucket
+    Type: String
+    Default: testing
+
+  Environment:
+    Description: Environment for deployment
+    Type: String
+    AllowedValues:
+      - dev
+      - stage
+      - prod
+      - poc
+    Default: dev
+    ConstraintDescription: Must be one of Dev, Stage, Prod, or POC.
+
+  APIName:
+    Description: The name of the business unit
+    Type: String
+    AllowedValues:
+      - fs
+      - fw
+      - fb
+      - fn
+      - ok
+    Default: fs
+    ConstraintDescription: Must be a supported BU Abbreviation (fs, fw, fb, fn, ok)
+
+  Version:
+    Description: "Function version - NB: The lambda zips must be available in the control bucket"
+    Type: String
+    Default: "0.1"
+
+  NodeVersion:
+    Description: "Node version for the lambda framework"
+    Type: String
+    Default: nodejs22.x
+    # todo allowed values
+
+  LoggingLevel:
+    Description: "Verbosity for Lambda functions logging"
+    Type: String
+    Default: debug
+    AllowedValues:
+      - error
+      - warn
+      - info
+      - verbose
+      - debug
+      - silly
+
+Resources:
+  ContentPublisherIAMRole: # IAM Role for the Lambda to run as
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: CloudWatchLogging
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
+        - PolicyName: EventBridgeGlobalBusPutEvents
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - events:PutEvents
+                Resource: # Todo: how can we make this more dynamic?
+                  - arn:aws:events:us-east-1:008971673418:event-bus/dev-gen-spark-v3-eventbridge-bus
+
+  ContentPublisherLogGroup: # Create log group so that logs don't get retained indefinitely in CloudWatch
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${Environment}-${APIName}-spark-v3-content-publisher"
+      RetentionInDays: 7
+
+  ContentPublisherLambda: # Create the Lambda function
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: "dev-foxsports-control" # Todo: { "Fn::ImportValue" : { "Fn::Join" : [ "", [ "foundation", { "Fn::FindInMap" : [ "AWSAccounts", { "Ref" : "VPCGroup" }, "Suffix" ] }, "-ControlBucket" ] ] } },
+        S3Key: !Sub "common/lambda/spark-v3-content-publisher-node-${Version}.zip"
+      Description: !Sub "Content Publisher Lambda for ${APIName}"
+      FunctionName: !Sub "${Environment}-${APIName}-spark-v3-content-publisher"
+      Handler: index.execute
+      MemorySize: 1024
+      Role: !GetAtt
+        - ContentPublisherIAMRole
+        - Arn
+      Runtime: !Sub "${NodeVersion}"
+      Architectures:
+        - arm64
+      Timeout: 300 # probably way too high, if it takes 300 seconds for this lambda to finish, we have some AWS problems
+      Environment:
+        Variables:
+          ENV: !Sub "${Environment}"
+          BUSINESS_UNIT: !Sub "${APIName}"
+          LOGGING_LEVEL: !Sub "${LoggingLevel}"
+          TARGET_BUS_ARN: arn:aws:events:us-east-1:008971673418:event-bus/dev-gen-spark-v3-eventbridge-bus
+
+Outputs:
+  ContentPublisherArn:
+    Description: The ARN of the Content Publisher Lambda
+    Value: !GetAtt ContentPublisherLambda.Arn
+    Export:
+      Name: !Sub "${Environment}-${APIName}-spark-v3-content-publisher-arn"
+
