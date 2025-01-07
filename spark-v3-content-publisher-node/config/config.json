@@ -1,0 +1,6 @@
+{
+  "AWS_REGION_NAME": "us-east-1",
+  "ENVIRONMENT": "dev",
+  "BUSINESS_UNIT": "fs",
+  "TARGET_BUS_ARN": "arn:aws:events:us-east-1:008971673418:event-bus/dev-gen-spark-v3-eventbridge-bus"
+}
