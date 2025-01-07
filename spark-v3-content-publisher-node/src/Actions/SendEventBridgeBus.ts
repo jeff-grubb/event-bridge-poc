@@ -4,7 +4,7 @@ import { EventBridgeResponse } from '../Response/EventBridgeResponse'
 import { BaseAction } from './BaseAction'
 
 export class SendEventBridgeBus extends BaseAction {
-    protected eventBridgeBus: any
+    protected eventBridgeBus: string
     protected client: any // Why do I need to define this here?
 
     constructor(config: any) {
