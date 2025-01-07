@@ -1,16 +1,20 @@
 import { DynamoDBRecord, DynamoDBStreamEvent } from 'aws-lambda'
+import { Config as ConfigInterface } from '@foxcorp/lib-fox-config-base'
 import { Response } from '../Response/Response'
 import { SendEventBridgeBus } from '../Actions/SendEventBridgeBus'
+
 
 export class Controller {
     private static requestType: string
     private static records: any[]
+    private readonly config: ConfigInterface // const vs readonly?
 
-    constructor() {}
+    constructor(config: ConfigInterface) {
+        this.config = config
+    }
 
     protected async executeRequest(event: any) {
-        // temp, everything is just going to be a dynamo message and sent to the bus.
-        const a = new SendEventBridgeBus()
+        const a = new SendEventBridgeBus(this.config)
         return await a.execute(event)
     }
 

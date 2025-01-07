@@ -1,29 +1,27 @@
 import { EventBridgeClient, PutEventsCommand } from "@aws-sdk/client-eventbridge";
-import { EventBridgeResponse } from '../Response/EventBridgeResponse'
-
-import { BaseAction } from './BaseAction'
 import { sprintf } from 'sprintf-js';
+import { EventBridgeResponse } from '../Response/EventBridgeResponse'
+import { BaseAction } from './BaseAction'
+
 
 export class SendEventBridgeBus extends BaseAction {
-
     protected eventBridgeBus: any
     protected client: any // Why do I need to define this here?
 
-    // todo - config
-    constructor() {
-        super(/*config*/)
+    constructor(config: any) {
+        super(config)
         this.eventBridgeBus = this.setEventBridgeBus()
         this.createClient() // Why do I need to instantiate this here?
     }
 
-    // todo - config
     protected setEventBridgeBus() {
-        return "arn:aws:events:us-east-1:008971673418:event-bus/dev-gen-spark-v3-eventbridge-bus"
+        return this.config.getField("TARGET_BUS_ARN")
     }
 
-    // todo - config
     protected createClient() {
-        this.client = new EventBridgeClient({ region: "us-east-1" });
+        this.client = new EventBridgeClient(
+            { region: this.config.getField("AWS_REGION_NAME") }
+        );
     }
 
     protected async executeAction(payload: any) : Promise<EventBridgeResponse> {
@@ -32,15 +30,15 @@ export class SendEventBridgeBus extends BaseAction {
         const eventParams = {
             Entries: [
                 {
-                    Source: sprintf("%s-%s-spark-v3-content-publisher", "dev", "fs"),
+                    Source: sprintf("%s-%s-spark-v3-content-publisher",
+                        this.config.getField("ENVIRONMENT"),
+                        this.config.getField("BUSINESS_UNIT")),
                     DetailType: "spark-event-bridge",
-                    Detail: JSON.stringify(payload),
+                    Detail: JSON.stringify(payload), // TODO - for events larger than 256K
                     EventBusName: this.eventBridgeBus
                 }
             ]
         }
-
-        console.log(eventParams)
 
         const command = new PutEventsCommand(eventParams);
 

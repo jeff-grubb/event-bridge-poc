@@ -27,6 +27,8 @@
     "@aws-sdk/client-eventbridge": "^3.721.0",
     "@aws-sdk/types": "^3.502.0",
     "@aws-sdk/util-dynamodb": "^3.172.0",
+    "@foxcorp/lib-fox-logger": "1.0.0",
+    "@foxcorp/lib-fox-config-base": "0.5.1",
     "@types/aws-lambda": "^8.10.103",
     "@types/sprintf-js": "^1.1.4",
     "agentkeepalive": "^4.1.4",

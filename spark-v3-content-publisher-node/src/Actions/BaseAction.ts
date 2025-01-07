@@ -1,11 +1,14 @@
+import { Config as ConfigInterface } from '@foxcorp/lib-fox-config-base'
 import { Response } from '../Response/Response'
+
 
 export abstract class BaseAction {
     // Why doesn't this work??
     //protected client: any
+    protected readonly config: ConfigInterface
 
-    // todo - config
-    constructor() {
+    constructor(config: ConfigInterface) {
+        this.config = config
         //this.client = this.createClient()
     }
 
