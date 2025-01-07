@@ -3,7 +3,6 @@ import { Config as ConfigInterface } from '@foxcorp/lib-fox-config-base'
 import { Response } from '../Response/Response'
 import { SendEventBridgeBus } from '../Actions/SendEventBridgeBus'
 
-
 export class Controller {
     private static requestType: string
     private static records: any[]

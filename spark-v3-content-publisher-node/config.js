@@ -2,7 +2,6 @@ const { BaseConfig } = require('@foxcorp/lib-fox-config-base')
 const { join } = require('path')
 const { existsSync } = require('fs')
 
-
 module.exports = class config extends BaseConfig {
   setConfigPath() {
     const configDir = join(__dirname, 'config')

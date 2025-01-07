@@ -3,7 +3,6 @@ import { sprintf } from 'sprintf-js';
 import { EventBridgeResponse } from '../Response/EventBridgeResponse'
 import { BaseAction } from './BaseAction'
 
-
 export class SendEventBridgeBus extends BaseAction {
     protected eventBridgeBus: any
     protected client: any // Why do I need to define this here?

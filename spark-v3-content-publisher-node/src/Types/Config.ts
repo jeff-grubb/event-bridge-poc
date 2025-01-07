@@ -1,6 +1,5 @@
 import { BaseConfig } from '@foxcorp/lib-fox-config-base'
 
-
 interface ConfigSchema { // appears to be pointless
     JG_TEST: string
 }

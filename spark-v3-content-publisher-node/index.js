@@ -1,7 +1,6 @@
 const Export = require('./build/index.js')
 const Configuration = require('./config.js')
 
-
 module.exports.execute = async (event, context) => {
     const config = new Configuration()
     const headers = {}
