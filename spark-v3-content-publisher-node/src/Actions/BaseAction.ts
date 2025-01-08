@@ -2,13 +2,12 @@ import { Config as ConfigInterface } from '@foxcorp/lib-fox-config-base'
 import { Response } from '../Response/Response'
 
 export abstract class BaseAction {
-    // Why doesn't this work??
-    //protected client: any
+    protected client: any
     protected readonly config: ConfigInterface
 
     constructor(config: ConfigInterface) {
         this.config = config
-        //this.client = this.createClient()
+        this.client = this.createClient()
     }
 
     public async execute(payload: any) {
@@ -19,7 +18,7 @@ export abstract class BaseAction {
         }
     }
 
-    //protected abstract createClient(): void
+    protected abstract createClient(): any
 
     protected abstract executeAction(payload: any): any
 }

@@ -5,7 +5,7 @@
   "main": "./build/index.js",
   "types": "build/index.d.ts",
   "scripts": {
-    "all": "npm run build && npm run cpe",
+    "all": "npm run build && npm run dynamo",
     "build": "rm -rf build/ && tsc --project tsconfig.json",
     "cpe": "node --input-type=module -e \"import {execute} from './index.js'; console.log(await execute(JSON.parse(fs.readFileSync('./test/content_publisher_event.json'))));\"",
     "dynamo": "node --input-type=module -e \"import {execute} from './index.js'; console.log(await execute(JSON.parse(fs.readFileSync('./test/dynamo_event.json'))));\""
@@ -27,8 +27,8 @@
     "@aws-sdk/client-eventbridge": "^3.721.0",
     "@aws-sdk/types": "^3.502.0",
     "@aws-sdk/util-dynamodb": "^3.172.0",
-    "@foxcorp/lib-fox-logger": "1.0.0",
-    "@foxcorp/lib-fox-config-base": "0.5.1",
+    "@foxcorp/lib-fox-logger": "^0.0.8",
+    "@foxcorp/lib-fox-config-base": "^0.5.1",
     "@types/aws-lambda": "^8.10.103",
     "@types/sprintf-js": "^1.1.4",
     "agentkeepalive": "^4.1.4",
